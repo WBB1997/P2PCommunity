@@ -154,13 +154,8 @@ public class Main extends Application {
             sender.setLoopbackMode(true);
             receiver.setLoopbackMode(true);
             receiver.joinGroup(ip);
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    listen();
-                }
-            }, 50);
+            sender.joinGroup(ip);
+            new Thread(this::listen).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -171,6 +166,7 @@ public class Main extends Application {
         try {
             while (true) {
                 DatagramPacket packet = new DatagramPacket(data, data.length);
+                System.out.println("1");
                 //receive()是阻塞方法，等待其他人发来消息
                 receiver.receive(packet);
                 InetSocketAddress inetSocketAddress = (InetSocketAddress) packet.getSocketAddress();
