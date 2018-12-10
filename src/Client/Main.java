@@ -1,7 +1,6 @@
 package Client;
 
 import Bean.Host;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -43,8 +42,11 @@ public class Main extends Application {
     private MulticastSocket sender;
     private ObservableList<DatagramPacket> datagramPacketObservableList = FXCollections.observableArrayList();
     private ObservableSet<Host> hostSet = FXCollections.observableSet();
-    private String name = "吴贝贝";
     private VBox right_root;
+
+    // 个人信息
+    private String name = "吴贝贝";
+    private String imgFile = "res/user.png";
 
 
     private static final int ON_LINE = 1;           // 上线通知
@@ -218,13 +220,7 @@ public class Main extends Application {
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 //receive()是阻塞方法，等待其他人发来消息
                 receiver.receive(packet);
-                JSONObject jsonObject = (JSONObject) JSON.parse(packet.getData());
-//                System.out.println("receiver :" + inetSocketAddress.getPort());
-//                System.out.println("receiver :" + inetSocketAddress.getAddress());
-                //如果是第一次上线的人，那么弹出提示窗口
-//                hostSet.add(inetSocketAddress);
-                // 将信息加入待发送列表，更新在窗口
-                datagramPacketObservableList.add(packet);
+                dealWithJson(new String(packet.getData()));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -312,6 +308,7 @@ public class Main extends Application {
                 }
                 break;
             case GET_USER_LIST:
+
                 break;
             case GROUP_SENDING:
                 break;
