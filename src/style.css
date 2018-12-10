@@ -1,16 +1,53 @@
-.scroll-pane{
+.text-area{
+    -fx-background-insets: 0;
     -fx-background-color: white;
 }
 
-.text-area{
-    -fx-background-insets: 0 0 0 0, 0, 1, 2;
-    -fx-padding: 0 0 0 0;
+.text-area .content {
+    -fx-background-color: white;
 }
 
-.button{
-    -fx-background-insets: 0 0 0 0;
+.text-area:focused {
+    -fx-background-color: white;
 }
 
-.flow-pane{
-    -fx-fill: white;
+.vbox {
+    -fx-background-color: white;
+    -fx-alignment: top-center;
+    -fx-spacing: 5px;
+    -fx-padding: 5, 5, 5, 5;
+}
+
+#right_root{
+    -fx-background-color: white;
+    -fx-alignment: top-center;
+    -fx-spacing: 5px;
+    -fx-border-style: hidden hidden hidden solid;
+    -fx-border-color: #c5c5c5;
+    -fx-padding: 5 20 5 5;
+}
+
+#left_bottom_bottom {
+    -fx-alignment: bottom-right;
+    -fx-padding: 5, 10, 5, 0;
+    -fx-spacing: 5;
+    -fx-background-color: white;
+}
+
+#left_bottom_top {
+    -fx-border-style: solid hidden hidden hidden;
+    -fx-border-color: #c5c5c5;
+    -fx-alignment: bottom-left;
+    -fx-background-color: white;
+    -fx-padding: 3 5 3 5;
+}
+
+#left_center_scro, #right_root_scro{
+    -fx-background-color: white;
+    -fx-hbar-policy: never;
+    -fx-vbar-policy: as-needed;
+    -fx-fit-to-height: true;
+    -fx-fit-to-width: true;
+    -fx-border-style: solid hidden hidden hidden;
+    -fx-border-color: #c5c5c5;
 }
