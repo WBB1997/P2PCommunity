@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -300,15 +300,30 @@ public class Main extends Application {
                 for (Node node : right_root.getChildren()) {
                     if (((Host) node.getUserData()).getIp().equals(host.getIp()) && ((Host) node.getUserData()).getPort() == host.getPort()) {
                         GridPane gridPane = (GridPane) node;
-                        Text nameText = (Text) gridPane.getChildren().get(0);
-                        nameText.setText(host.getName());
-                        ImageView imageView = (ImageView) gridPane.getChildren().get(1);
-                        imageView.setImage(GenerateImage(host.getImg()));
+                        Platform.runLater(() -> {
+                            Text nameText = (Text) gridPane.getChildren().get(0);
+                            nameText.setText(host.getName());
+                            ImageView imageView = (ImageView) gridPane.getChildren().get(1);
+                            imageView.setImage(GenerateImage(host.getImg()));
+                        });
                     }
                 }
                 break;
             case GET_USER_LIST:
-
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("code", GET_USER_LIST);
+                JSONObject head = new JSONObject();
+                head.put("name", name);
+                try {
+                    InetAddress localhost = InetAddress.getLocalHost();
+                    head.put("ip", localhost.getHostAddress());
+                    head.put("port", Port);
+                    head.put("img", GetImageStr(imgFile));
+                }catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+                jsonObject.put("head", head);
+                send(jsonObject.toString().getBytes());
                 break;
             case GROUP_SENDING:
                 break;
@@ -316,11 +331,6 @@ public class Main extends Application {
                 break;
         }
     }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     //base64字符串转化成图片
     private static Image GenerateImage(String imgStr) {   //对字节数组字符串进行Base64解码并生成图片
         if (imgStr == null) //图像数据为空
@@ -359,4 +369,9 @@ public class Main extends Application {
         BASE64Encoder encoder = new BASE64Encoder();
         return encoder.encode(data);//返回Base64编码过的字节数组字符串
     }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
 }
