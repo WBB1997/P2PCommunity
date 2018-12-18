@@ -8,6 +8,13 @@ public class Host {
     private int port;
     private String img;
 
+    public Host(String name, String ip, int port, String img) {
+        this.name = name;
+        this.ip = ip;
+        this.port = port;
+        this.img = img;
+    }
+
     public String getName() {
         return name;
     }

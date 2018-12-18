@@ -27,10 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -190,23 +187,8 @@ public class Main extends Application {
             receiver.joinGroup(ip);
             sender = new MulticastSocket();
             sender.setLoopbackMode(false);
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), Port));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 1));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 2));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 3));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 4));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 5));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 6));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 7));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 8));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 90));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 10));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 12));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 13));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 14));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 15));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 16));
-//            hostSet.add(new InetSocketAddress(InetAddress.getLocalHost(), 17));
+            hostSet.add(new Host("吴贝贝", "127.0.0.1", 4444, GetImageStr("res/user.png")));
+            hostSet.add(new Host("吴贝贝1", "127.0.0.1", 4444, GetImageStr("res/user.png")));
             new Thread(this::receive).start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -272,8 +254,8 @@ public class Main extends Application {
         gridPane.setUserData(host);
         Text nameText = new Text(host.getName());
         nameText.setTextAlignment(TextAlignment.LEFT);
-        ImageView imageView = new ImageView(GenerateImage(host.getImg()));
-        gridPane.add(imageView, 0, 0,1,1);
+        ImageView imageView = new ImageView(new Image(GenerateImage(host.getImg()) , 32,32,true,true));
+        gridPane.add(imageView, 0, 0,1, 1);
         gridPane.add(nameText, 1, 0, 3, 1);
         Tooltip tooltip = new Tooltip(host.getIp());
         Tooltip.install(gridPane, tooltip);
@@ -304,7 +286,7 @@ public class Main extends Application {
                             Text nameText = (Text) gridPane.getChildren().get(0);
                             nameText.setText(host.getName());
                             ImageView imageView = (ImageView) gridPane.getChildren().get(1);
-                            imageView.setImage(GenerateImage(host.getImg()));
+                            imageView.setImage(new Image(GenerateImage(host.getImg()) , 32,32,true,true));
                         });
                     }
                 }
@@ -326,13 +308,15 @@ public class Main extends Application {
                 send(jsonObject.toString().getBytes());
                 break;
             case GROUP_SENDING:
+
                 break;
             case PRIVATE_CHAT:
+
                 break;
         }
     }
     //base64字符串转化成图片
-    private static Image GenerateImage(String imgStr) {   //对字节数组字符串进行Base64解码并生成图片
+    private static ByteArrayInputStream GenerateImage(String imgStr) {   //对字节数组字符串进行Base64解码并生成图片
         if (imgStr == null) //图像数据为空
             return null;
         BASE64Decoder decoder = new BASE64Decoder();
@@ -344,17 +328,17 @@ public class Main extends Application {
                     b[i] += 256;
                 }
             }
-            return new Image(new ByteArrayInputStream(b));
+            return new ByteArrayInputStream(b);
         } catch (Exception e) {
             return null;
         }
     }
 
     //图片转化成base64字符串
-    public static String GetImageStr(String imgFile) {
+    private static String GetImageStr(String imgFile) {
         //将图片文件转化为字节数组字符串，并对其进行Base64编码处理
         InputStream in;
-        byte[] data = null;
+        byte[] data;
         //读取图片字节数组
         try {
             in = new FileInputStream(imgFile);
