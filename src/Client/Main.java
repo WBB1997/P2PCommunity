@@ -50,8 +50,9 @@ public class Main extends Application {
     private static final int OFF_LINE = 2;         // 下线
     private static final int UPDATE_USER_INFO = 3; // 更新个人信息
     private static final int GET_USER_LIST = 4;    // 获取用户列表
-    private static final int GROUP_SENDING = 5;    // 群聊
-    private static final int PRIVATE_CHAT = 6;     // 私聊
+    private static final int RETURN_USER_LIST = 5; // 返回用户列表
+    private static final int GROUP_SENDING = 6;    // 群聊
+    private static final int PRIVATE_CHAT = 7;     // 私聊
 
 
     @Override
@@ -133,8 +134,10 @@ public class Main extends Application {
         });
         send.setOnAction(event -> {
             String message = inputArea.getText();
+            inputArea.setText("");
             send_group_sending(message);
             left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
+            inputArea.requestFocus();
         });
         DataObservableList.addListener((ListChangeListener<Pair<Host,String>>) c -> {
             if (c.next() && c.wasAdded()) {
@@ -189,7 +192,7 @@ public class Main extends Application {
             sender.joinGroup(ip);
             sender.setTimeToLive(128);
             new Thread(this::receive).start();
-//            send_get_user_list();
+            send_get_user_list();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -342,13 +345,19 @@ public class Main extends Application {
                             Text nameText = (Text) gridPane.getChildren().get(0);
                             nameText.setText(host.getName());
                             ImageView imageView = (ImageView) gridPane.getChildren().get(1);
-                            imageView.setImage(new Image(GenerateImage(host.getImg()) , 32,32,true,true));
+                            imageView.setImage(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
                         });
                     }
                 }
                 break;
             case GET_USER_LIST:
-                send(constructLocalJson(null,GET_USER_LIST).toString().getBytes());
+                send(constructLocalJson(null, RETURN_USER_LIST).toString().getBytes());
+                break;
+            case RETURN_USER_LIST:
+                host = json.getObject("head", Host.class);
+                Platform.runLater(() -> {
+                    hostSet.add(host);
+                });
                 break;
             case GROUP_SENDING:
                 host = json.getObject("head", Host.class);
