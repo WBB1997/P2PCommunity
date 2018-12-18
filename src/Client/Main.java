@@ -1,11 +1,14 @@
 package Client;
 
 import Bean.Host;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
-import javafx.collections.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -17,6 +20,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
@@ -24,26 +28,31 @@ import javafx.util.Pair;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.*;
+import java.io.*;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 
 public class Main extends Application {
     private static final String groupAddres = "230.0.0.1";
     private static final int Port = 1234;
     private MulticastSocket receiver;
     private MulticastSocket sender;
-    private ObservableList<Pair<Host,String>> DataObservableList = FXCollections.observableArrayList();
-    private ObservableSet<Host> hostSet = FXCollections.observableSet();
+    private ObservableList<Pair<Host, String>> DataObservableList = FXCollections.observableArrayList();
+    private Map<Host, MyStage> privateChatStage = new HashMap<>();
+    private Set<Host> hostSet = new HashSet<>();
     private VBox right_root;
+    private VBox left_center;
 
     // 个人信息
-    private String name = "吴贝贝";
-    private String imgFile = "res/user.png";
+    private String name;
+    private String imgFile;
+    // 文件路径
+    private File file = new File("res/config");
 
 
     private static final int ON_LINE = 1;           // 上线通知
@@ -57,6 +66,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        Reading();
         BorderPane root = new BorderPane();
 
         // right_root
@@ -70,13 +80,14 @@ public class Main extends Application {
         // left_center
         ScrollPane left_center_scro = new ScrollPane();
         left_center_scro.setId("left_center_scro");
-        VBox left_center = new VBox();
+        left_center = new VBox();
         left_center.getStyleClass().add("vbox");
         left_center.setAlignment(Pos.TOP_CENTER);
         left_center.getChildren().addListener((ListChangeListener<Node>) c -> {
             if (c.next() && c.wasAdded())
                 left_center_scro.setVvalue(1.0);
         });
+        left_center.requestFocus();
         left_center_scro.setContent(left_center);
 
         // left_bottom_top
@@ -111,25 +122,19 @@ public class Main extends Application {
         VBox.setVgrow(left_center_scro, Priority.ALWAYS);
         root.setCenter(left_root);
 
-        primaryStage.setTitle("p2pCommunity");
+        primaryStage.setTitle("当前登录用户名：" + name);
         Scene scene = new Scene(root, 800, 600);
 
         primaryStage.setScene(scene);
+        primaryStage.getIcons().add(new Image("file:" + imgFile));
         primaryStage.getScene().getStylesheets().add("style.css");
         primaryStage.show();
         // event
-//        left_center_scro.setOnScroll(event -> {
-//            System.out.println("width->" + left_center_scro.getViewportBounds().getWidth());
-//            System.out.println("height->" + left_center_scro.getViewportBounds().getHeight());
-//            System.out.println("MinY->" + left_center_scro.getViewportBounds().getMinY());
-//            System.out.println("MaxY->" + left_center_scro.getViewportBounds().getMaxY());
-//            System.out.println("height->" + left_center_scro.getHeight());
-//            System.out.println("width->" + left_center_scro.getWidth());
-//            System.out.println("==============================================");
-//        });
         close.setOnAction(event -> {
+            send_off_line();
             receiver.close();
             sender.close();
+            Saving();
             System.exit(0);
         });
         send.setOnAction(event -> {
@@ -139,9 +144,9 @@ public class Main extends Application {
             left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
             inputArea.requestFocus();
         });
-        DataObservableList.addListener((ListChangeListener<Pair<Host,String>>) c -> {
+        DataObservableList.addListener((ListChangeListener<Pair<Host, String>>) c -> {
             if (c.next() && c.wasAdded()) {
-                for (Pair<Host,String> pair : c.getAddedSubList()) {
+                for (Pair<Host, String> pair : c.getAddedSubList()) {
                     Platform.runLater(() -> {
                         left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
                         left_center.getChildren().add(getMessagePane(pair.getKey().getName(), pair.getValue(), new Image(GenerateImage(pair.getKey().getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
@@ -149,38 +154,17 @@ public class Main extends Application {
                 }
             }
         });
-        hostSet.addListener((SetChangeListener<Host>) change -> {
-            if (change.wasAdded()) {
-                for (Host host : change.getSet()) {
-                    Platform.runLater(() -> {
-                        Text prompt = new Text(host.getName() + "加入聊天室！");
-                        prompt.setId("prompt");
-                        left_center.getChildren().add(prompt);
-                        right_root.getChildren().add(getUserPane(host));
-                    });
-                }
-            } else if (change.wasRemoved()) {
-                Platform.runLater(() -> {
-                    for (Host host : change.getSet()) {
-                        for (Node node : right_root.getChildren()) {
-                            if (host == node.getUserData()) {
-                                right_root.getChildren().remove(node);
-                                break;
-                            }
-                        }
-                    }
-                });
-            }
-        });
         primaryStage.setOnCloseRequest(event -> {
+            send_off_line();
             receiver.close();
             sender.close();
+            Saving();
             System.exit(0);
         });
-        initSocket();
+        Init();
     }
 
-    private void initSocket() {
+    private void Init() {
         try {
             InetAddress ip = InetAddress.getByName(groupAddres);
             receiver = new MulticastSocket(Port);
@@ -192,7 +176,11 @@ public class Main extends Application {
             sender.joinGroup(ip);
             sender.setTimeToLive(128);
             new Thread(this::receive).start();
+            Host host = new Host(name, InetAddress.getLocalHost().getHostAddress(), Port, GetImageStr(imgFile));
+            Platform.runLater(() -> right_root.getChildren().add(getUserPane(host)));
+            hostSet.add(host);
             send_get_user_list();
+            send_on_line();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -216,7 +204,7 @@ public class Main extends Application {
     }
 
     private void send(byte[] data) {
-        if(data.length > 65536) {
+        if (data.length > 65536) {
             System.err.println("数据包长度过长");
             return;
         }
@@ -262,19 +250,18 @@ public class Main extends Application {
         gridPane.setUserData(host);
         Text nameText = new Text(host.getName());
         nameText.setTextAlignment(TextAlignment.LEFT);
-        ImageView imageView = new ImageView(new Image(GenerateImage(host.getImg()) , 32,32,true,true));
-        gridPane.add(imageView, 0, 0,1, 1);
+        ImageView imageView = new ImageView(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
+        gridPane.add(imageView, 0, 0, 1, 1);
         gridPane.add(nameText, 1, 0, 3, 1);
         Tooltip tooltip = new Tooltip(host.getIp());
         Tooltip.install(gridPane, tooltip);
-//        gridPane.setGridLinesVisible(true);
-//        gridPane.setBackground(new Background(new BackgroundFill(Color.WHITE, null, null)));
+        gridPane.setGridLinesVisible(true);
+        gridPane.setBackground(new Background(new BackgroundFill(Color.GREY, null, null)));
         return gridPane;
     }
-    //
 
     //构建发送的JSON
-    private JSONObject constructLocalJson(String str_data, int code){
+    private JSONObject constructLocalJson(String str_data, int code) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", code);
         JSONObject head = new JSONObject();
@@ -284,42 +271,43 @@ public class Main extends Application {
             head.put("ip", localhost.getHostAddress());
             head.put("port", Port);
             head.put("img", GetImageStr(imgFile));
-        }catch (UnknownHostException e) {
+        } catch (UnknownHostException e) {
             e.printStackTrace();
         }
         jsonObject.put("head", head);
-        if(str_data != null)
-            jsonObject.put("data",str_data);
+        if (str_data != null)
+            jsonObject.put("data", str_data);
         return jsonObject;
     }
+
     // 上线消息
-    private void send_on_line(){
-        send(constructLocalJson(null,ON_LINE).toString().getBytes());
+    private void send_on_line() {
+        send(constructLocalJson(null, ON_LINE).toString().getBytes());
     }
 
     // 下线消息
-    private void send_off_line(){
-        send(constructLocalJson(null,OFF_LINE).toString().getBytes());
+    private void send_off_line() {
+        send(constructLocalJson(null, OFF_LINE).toString().getBytes());
     }
 
     // 更新用户消息
-    private void send_update_user_info(){
-        send(constructLocalJson(null,UPDATE_USER_INFO).toString().getBytes());
+    private void send_update_user_info() {
+        send(constructLocalJson(null, UPDATE_USER_INFO).toString().getBytes());
     }
 
     // 获取用户列表
-    private void send_get_user_list(){
-        send(constructLocalJson(null,GET_USER_LIST).toString().getBytes());
+    private void send_get_user_list() {
+        send(constructLocalJson(null, GET_USER_LIST).toString().getBytes());
     }
 
     // 群聊
-    private void send_group_sending(String str_data){
-        send(constructLocalJson(str_data,GROUP_SENDING).toString().getBytes());
+    private void send_group_sending(String str_data) {
+        send(constructLocalJson(str_data, GROUP_SENDING).toString().getBytes());
     }
 
     // 私聊
-    private void send_private_chat(String str_data){
-        send(constructLocalJson(str_data,PRIVATE_CHAT).toString().getBytes());
+    private void send_private_chat(String str_data) {
+        send(constructLocalJson(str_data, PRIVATE_CHAT).toString().getBytes());
     }
 
     //处理接收消息
@@ -327,19 +315,51 @@ public class Main extends Application {
         JSONObject json = JSONObject.parseObject(jsonString);
         int code = json.getInteger("code");
         Host host;
+        String data;
         switch (code) {
             case ON_LINE:
                 host = json.getObject("head", Host.class);
+                Platform.runLater(() -> {
+                    Text prompt = new Text(host.getName() + "加入聊天室！");
+                    MyStage myStage;
+                    prompt.setId("prompt");
+                    left_center.getChildren().add(prompt);
+                    Pane userPane = getUserPane(host);
+                    right_root.getChildren().add(userPane);
+                    if(!privateChatStage.containsKey(host)){
+                        myStage = new MyStage();
+                        Button button = myStage.getSend();
+                        TextArea textArea = myStage.getInputArea();
+                        VBox left_center = myStage.getLeft_center();
+                        button.setOnAction(event -> {
+                            String message = textArea.getText();
+                            textArea.setText("");
+                            send_private_chat(message);
+                            left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
+                            textArea.requestFocus();
+                        });
+                        privateChatStage.put(host, myStage);
+                    }
+                });
                 hostSet.add(host);
                 break;
             case OFF_LINE:
                 host = json.getObject("head", Host.class);
-                hostSet.remove(host);
+                Platform.runLater(() -> {
+                    for (Node node : right_root.getChildren()) {
+                        if (host == node.getUserData()) {
+                            right_root.getChildren().remove(node);
+                            hostSet.remove(host);
+                            break;
+                        }
+                    }
+                });
                 break;
             case UPDATE_USER_INFO:
                 host = json.getObject("head", Host.class);
                 for (Node node : right_root.getChildren()) {
-                    if (((Host) node.getUserData()).getIp().equals(host.getIp()) && ((Host) node.getUserData()).getPort() == host.getPort()) {
+                    Host host1 = (Host) node.getUserData();
+                    if (host1.getIp().equals(host.getIp()) && host1.getPort() == host.getPort()) {
                         GridPane gridPane = (GridPane) node;
                         Platform.runLater(() -> {
                             Text nameText = (Text) gridPane.getChildren().get(0);
@@ -347,6 +367,7 @@ public class Main extends Application {
                             ImageView imageView = (ImageView) gridPane.getChildren().get(1);
                             imageView.setImage(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
                         });
+                        return;
                     }
                 }
                 break;
@@ -355,19 +376,30 @@ public class Main extends Application {
                 break;
             case RETURN_USER_LIST:
                 host = json.getObject("head", Host.class);
-                Platform.runLater(() -> {
-                    hostSet.add(host);
-                });
+                Platform.runLater(() -> right_root.getChildren().add(getUserPane(host)));
+                hostSet.add(host);
                 break;
             case GROUP_SENDING:
                 host = json.getObject("head", Host.class);
-                String data = json.getString("data");
+                data = json.getString("data");
                 DataObservableList.add(new Pair<>(host, data));
                 break;
             case PRIVATE_CHAT:
+                host = json.getObject("head", Host.class);
+                MyStage myStage;
+                data = json.getString("data");
+                myStage =  privateChatStage.get(host);
+                if(myStage != null) {
+                    myStage.setTitle("正在与 " + host.getName() + " 私聊");
+                    myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
+                    if (data != null)
+                        myStage.getLeft_center().getChildren().add(getMessagePane(host.getName(), data, new Image(GenerateImage(host.getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
+                    myStage.show();
+                }
                 break;
         }
     }
+
     //base64字符串转化成图片
     private static ByteArrayInputStream GenerateImage(String imgStr) {   //对字节数组字符串进行Base64解码并生成图片
         if (imgStr == null) //图像数据为空
@@ -407,8 +439,42 @@ public class Main extends Application {
         return encoder.encode(data);//返回Base64编码过的字节数组字符串
     }
 
+    private void Saving(){
+        try {
+            JSONObject jsonObject = new JSONObject();
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8));
+            // 添加用户配置保存
+            jsonObject.put("name", name);
+            jsonObject.put("imgFile", imgFile);
+            writer.write(jsonObject.toString());
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void Reading(){
+        try {
+            //读取配置信息
+            StringBuilder jsonString = new StringBuilder();
+            if (file.exists()) {
+                String line;
+                BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+                while ((line = reader.readLine()) != null)
+                    jsonString.append(line);
+                reader.close();
+            } else {
+                return;
+            }
+            JSONObject jsonObject = JSON.parseObject(jsonString.toString());
+            name = jsonObject.getString("name");
+            imgFile = jsonObject.getString("imgFile");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         launch(args);
     }
-
 }

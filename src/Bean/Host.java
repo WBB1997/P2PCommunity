@@ -55,8 +55,14 @@ public class Host {
         Host host = (Host) o;
 
         if (port != host.port) return false;
-        if (!Objects.equals(name, host.name)) return false;
-        if (!Objects.equals(ip, host.ip)) return false;
-        return Objects.equals(img, host.img);
+        return Objects.equals(ip, host.ip);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (ip != null ? ip.hashCode() : 0);
+        result = 31 * result + port;
+        return result;
     }
 }
