@@ -20,6 +20,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
@@ -32,12 +33,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Main extends Application {
-    // key = ipAddress , value = ipAddress + port
     private static final String groupAddres = "230.0.0.1";
     private static final int Port = 1234;
     private MulticastSocket receiver;
     private MulticastSocket sender;
-    private ObservableList<DatagramPacket> datagramPacketObservableList = FXCollections.observableArrayList();
+    private ObservableList<Pair<Host,String>> DataObservableList = FXCollections.observableArrayList();
     private ObservableSet<Host> hostSet = FXCollections.observableSet();
     private VBox right_root;
 
@@ -113,8 +113,6 @@ public class Main extends Application {
         primaryStage.setTitle("p2pCommunity");
         Scene scene = new Scene(root, 800, 600);
 
-//        ScenicView.show(scene);
-
         primaryStage.setScene(scene);
         primaryStage.getScene().getStylesheets().add("style.css");
         primaryStage.show();
@@ -135,15 +133,15 @@ public class Main extends Application {
         });
         send.setOnAction(event -> {
             String message = inputArea.getText();
-            send(message.getBytes());
-            left_center.getChildren().add(getMessagePane(name, message, new Image("file:res/user.png", 32, 32, true, true), Pos.CENTER_RIGHT));
+            send_group_sending(message);
+            left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
         });
-        datagramPacketObservableList.addListener((ListChangeListener<DatagramPacket>) c -> {
+        DataObservableList.addListener((ListChangeListener<Pair<Host,String>>) c -> {
             if (c.next() && c.wasAdded()) {
-                for (DatagramPacket datagramPacket : c.getAddedSubList()) {
+                for (Pair<Host,String> pair : c.getAddedSubList()) {
                     Platform.runLater(() -> {
                         left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
-                        left_center.getChildren().add(getMessagePane(datagramPacket.getSocketAddress().toString(), new String(datagramPacket.getData()), new Image("file:res/user.png", 32, 32, true, true), Pos.CENTER_LEFT));
+                        left_center.getChildren().add(getMessagePane(pair.getKey().getName(), pair.getValue(), new Image(GenerateImage(pair.getKey().getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
                     });
                 }
             }
@@ -183,25 +181,28 @@ public class Main extends Application {
         try {
             InetAddress ip = InetAddress.getByName(groupAddres);
             receiver = new MulticastSocket(Port);
-            receiver.setLoopbackMode(false);
+            receiver.setLoopbackMode(true);
             receiver.joinGroup(ip);
+            receiver.setTimeToLive(128);
             sender = new MulticastSocket();
-            sender.setLoopbackMode(false);
-            hostSet.add(new Host("吴贝贝", "127.0.0.1", 4444, GetImageStr("res/user.png")));
-            hostSet.add(new Host("吴贝贝1", "127.0.0.1", 4444, GetImageStr("res/user.png")));
+            sender.setLoopbackMode(true);
+            sender.joinGroup(ip);
+            sender.setTimeToLive(128);
             new Thread(this::receive).start();
+//            send_get_user_list();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private void receive() {
-        byte[] data = new byte[4096];
+        byte[] data = new byte[65536];
         try {
             while (true) {
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 //receive()是阻塞方法，等待其他人发来消息
                 receiver.receive(packet);
+                System.out.println(203 + new String(packet.getData()));
                 dealWithJson(new String(packet.getData()));
             }
         } catch (Exception e) {
@@ -212,6 +213,10 @@ public class Main extends Application {
     }
 
     private void send(byte[] data) {
+        if(data.length > 65536) {
+            System.err.println("数据包长度过长");
+            return;
+        }
         try {
             InetAddress ip = InetAddress.getByName(groupAddres);
             DatagramPacket packet = new DatagramPacket(data, data.length, ip, Port);
@@ -263,7 +268,58 @@ public class Main extends Application {
 //        gridPane.setBackground(new Background(new BackgroundFill(Color.WHITE, null, null)));
         return gridPane;
     }
+    //
 
+    //构建发送的JSON
+    private JSONObject constructLocalJson(String str_data, int code){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", code);
+        JSONObject head = new JSONObject();
+        head.put("name", name);
+        try {
+            InetAddress localhost = InetAddress.getLocalHost();
+            head.put("ip", localhost.getHostAddress());
+            head.put("port", Port);
+            head.put("img", GetImageStr(imgFile));
+        }catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        jsonObject.put("head", head);
+        if(str_data != null)
+            jsonObject.put("data",str_data);
+        return jsonObject;
+    }
+    // 上线消息
+    private void send_on_line(){
+        send(constructLocalJson(null,ON_LINE).toString().getBytes());
+    }
+
+    // 下线消息
+    private void send_off_line(){
+        send(constructLocalJson(null,OFF_LINE).toString().getBytes());
+    }
+
+    // 更新用户消息
+    private void send_update_user_info(){
+        send(constructLocalJson(null,UPDATE_USER_INFO).toString().getBytes());
+    }
+
+    // 获取用户列表
+    private void send_get_user_list(){
+        send(constructLocalJson(null,GET_USER_LIST).toString().getBytes());
+    }
+
+    // 群聊
+    private void send_group_sending(String str_data){
+        send(constructLocalJson(str_data,GROUP_SENDING).toString().getBytes());
+    }
+
+    // 私聊
+    private void send_private_chat(String str_data){
+        send(constructLocalJson(str_data,PRIVATE_CHAT).toString().getBytes());
+    }
+
+    //处理接收消息
     private void dealWithJson(String jsonString) {
         JSONObject json = JSONObject.parseObject(jsonString);
         int code = json.getInteger("code");
@@ -292,26 +348,14 @@ public class Main extends Application {
                 }
                 break;
             case GET_USER_LIST:
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("code", GET_USER_LIST);
-                JSONObject head = new JSONObject();
-                head.put("name", name);
-                try {
-                    InetAddress localhost = InetAddress.getLocalHost();
-                    head.put("ip", localhost.getHostAddress());
-                    head.put("port", Port);
-                    head.put("img", GetImageStr(imgFile));
-                }catch (UnknownHostException e) {
-                    e.printStackTrace();
-                }
-                jsonObject.put("head", head);
-                send(jsonObject.toString().getBytes());
+                send(constructLocalJson(null,GET_USER_LIST).toString().getBytes());
                 break;
             case GROUP_SENDING:
-
+                host = json.getObject("head", Host.class);
+                String data = json.getString("data");
+                DataObservableList.add(new Pair<>(host, data));
                 break;
             case PRIVATE_CHAT:
-
                 break;
         }
     }
