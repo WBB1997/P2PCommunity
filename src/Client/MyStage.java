@@ -79,6 +79,8 @@ class MyStage extends Stage {
         });
         this.setScene(scene);
         this.getScene().getStylesheets().add("style.css");
+
+        close.setOnAction(event -> this.hide());
     }
 
     Button getSend() {

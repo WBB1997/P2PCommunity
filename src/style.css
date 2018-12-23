@@ -51,3 +51,7 @@
     -fx-border-style: solid hidden hidden hidden;
     -fx-border-color: #c5c5c5;
 }
+
+.menu-bar{
+    -fx-background-color: white;
+}
