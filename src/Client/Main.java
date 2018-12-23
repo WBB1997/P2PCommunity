@@ -2,23 +2,27 @@ package Client;
 
 import Bean.Host;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
@@ -47,6 +51,8 @@ public class Main extends Application {
     private Set<Host> hostSet = new HashSet<>();
     private VBox right_root;
     private VBox left_center;
+    private boolean flag = true;
+    private Stage MainStage;
 
     // 个人信息
     private String name;
@@ -66,8 +72,17 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        MainStage = primaryStage;
         Reading();
         BorderPane root = new BorderPane();
+        // 菜单
+        MenuBar menuBar = new MenuBar();
+        Menu menuSetting = new Menu("设置");
+        MenuItem menuName = new MenuItem("设置姓名");
+        MenuItem menuImg = new MenuItem("设置头像");
+        menuSetting.getItems().addAll(menuName,menuImg);
+        menuBar.getMenus().addAll(menuSetting);
+        root.setTop(menuBar);
 
         // right_root
         right_root = new VBox();
@@ -125,11 +140,28 @@ public class Main extends Application {
         primaryStage.setTitle("当前登录用户名：" + name);
         Scene scene = new Scene(root, 800, 600);
 
+        primaryStage.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if(!oldValue && newValue)
+                flag = true;
+        });
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image("file:" + imgFile));
         primaryStage.getScene().getStylesheets().add("style.css");
         primaryStage.show();
         // event
+        menuName.setOnAction(event -> {
+            TextInputDialog dialog = new TextInputDialog(name);
+            dialog.setTitle("修改姓名");
+            dialog.setHeaderText(null);
+            dialog.setContentText("请输入您新的姓名:");
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()){
+                if(!result.get().isEmpty()) {
+                    name = result.get();
+                    send_update_user_info();
+                }
+            }
+        });
         close.setOnAction(event -> {
             send_off_line();
             receiver.close();
@@ -139,16 +171,21 @@ public class Main extends Application {
         });
         send.setOnAction(event -> {
             String message = inputArea.getText();
-            inputArea.setText("");
-            send_group_sending(message);
-            left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
+            if (message.length() > 0) {
+                inputArea.setText("");
+                send_group_sending(message);
+                left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
+            }
             inputArea.requestFocus();
         });
         DataObservableList.addListener((ListChangeListener<Pair<Host, String>>) c -> {
             if (c.next() && c.wasAdded()) {
                 for (Pair<Host, String> pair : c.getAddedSubList()) {
                     Platform.runLater(() -> {
-                        left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
+                        if(flag) {
+                            left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
+                            flag = false;
+                        }
                         left_center.getChildren().add(getMessagePane(pair.getKey().getName(), pair.getValue(), new Image(GenerateImage(pair.getKey().getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
                     });
                 }
@@ -168,16 +205,16 @@ public class Main extends Application {
         try {
             InetAddress ip = InetAddress.getByName(groupAddres);
             receiver = new MulticastSocket(Port);
-            receiver.setLoopbackMode(true);
+            receiver.setLoopbackMode(false);
             receiver.joinGroup(ip);
             receiver.setTimeToLive(128);
             sender = new MulticastSocket();
-            sender.setLoopbackMode(true);
+            sender.setLoopbackMode(false);
             sender.joinGroup(ip);
             sender.setTimeToLive(128);
             new Thread(this::receive).start();
             Host host = new Host(name, InetAddress.getLocalHost().getHostAddress(), Port, GetImageStr(imgFile));
-            Platform.runLater(() -> right_root.getChildren().add(getUserPane(host)));
+//            Platform.runLater(() -> right_root.getChildren().add(getUserPane(host)));
             hostSet.add(host);
             send_get_user_list();
             send_on_line();
@@ -193,10 +230,14 @@ public class Main extends Application {
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 //receive()是阻塞方法，等待其他人发来消息
                 receiver.receive(packet);
-                System.out.println(203 + new String(packet.getData()));
-                dealWithJson(new String(packet.getData()));
+                System.out.println("Rece " + new String(packet.getData()));
+                try {
+                    dealWithJson(new String(packet.getData()));
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             receiver.close();
@@ -209,8 +250,10 @@ public class Main extends Application {
             return;
         }
         try {
+            System.out.println( "数据包长度 " + data.length);
             InetAddress ip = InetAddress.getByName(groupAddres);
             DatagramPacket packet = new DatagramPacket(data, data.length, ip, Port);
+            System.out.println( "数据包长度 " + packet.getLength());
             sender.send(packet);
         } catch (IOException e) {
             e.printStackTrace();
@@ -257,6 +300,7 @@ public class Main extends Application {
         Tooltip.install(gridPane, tooltip);
         gridPane.setGridLinesVisible(true);
         gridPane.setBackground(new Background(new BackgroundFill(Color.GREY, null, null)));
+        gridPane.setHgap(10);
         return gridPane;
     }
 
@@ -265,9 +309,9 @@ public class Main extends Application {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", code);
         JSONObject head = new JSONObject();
-        head.put("name", name);
         try {
             InetAddress localhost = InetAddress.getLocalHost();
+            head.put("name", name);
             head.put("ip", localhost.getHostAddress());
             head.put("port", Port);
             head.put("img", GetImageStr(imgFile));
@@ -277,6 +321,7 @@ public class Main extends Application {
         jsonObject.put("head", head);
         if (str_data != null)
             jsonObject.put("data", str_data);
+        System.out.println( "TO : " + jsonObject.toString());
         return jsonObject;
     }
 
@@ -312,7 +357,7 @@ public class Main extends Application {
 
     //处理接收消息
     private void dealWithJson(String jsonString) {
-        JSONObject json = JSONObject.parseObject(jsonString);
+        JSONObject json = JSON.parseObject(jsonString);
         int code = json.getInteger("code");
         Host host;
         String data;
@@ -325,6 +370,15 @@ public class Main extends Application {
                     prompt.setId("prompt");
                     left_center.getChildren().add(prompt);
                     Pane userPane = getUserPane(host);
+                    userPane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
+                        if(event.getClickCount() == 2) {
+                            MyStage myStage1 = privateChatStage.get(host);
+                            if (!myStage1.isShowing())
+                                myStage1.show();
+                            else
+                                myStage1.requestFocus();
+                        }
+                    });
                     right_root.getChildren().add(userPane);
                     if(!privateChatStage.containsKey(host)){
                         myStage = new MyStage();
@@ -338,6 +392,8 @@ public class Main extends Application {
                             left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
                             textArea.requestFocus();
                         });
+                        myStage.setTitle("正在与 " + host.getName() + " 私聊");
+                        myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
                         privateChatStage.put(host, myStage);
                     }
                 });
@@ -350,6 +406,7 @@ public class Main extends Application {
                         if (host == node.getUserData()) {
                             right_root.getChildren().remove(node);
                             hostSet.remove(host);
+                            privateChatStage.remove(host);
                             break;
                         }
                     }
@@ -362,12 +419,12 @@ public class Main extends Application {
                     if (host1.getIp().equals(host.getIp()) && host1.getPort() == host.getPort()) {
                         GridPane gridPane = (GridPane) node;
                         Platform.runLater(() -> {
-                            Text nameText = (Text) gridPane.getChildren().get(0);
+                            Text nameText = (Text) gridPane.getChildren().get(1);
                             nameText.setText(host.getName());
-                            ImageView imageView = (ImageView) gridPane.getChildren().get(1);
+                            MainStage.setTitle("当前登录用户名：" + name);
+                            ImageView imageView = (ImageView) gridPane.getChildren().get(0);
                             imageView.setImage(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
                         });
-                        return;
                     }
                 }
                 break;
@@ -390,11 +447,18 @@ public class Main extends Application {
                 data = json.getString("data");
                 myStage =  privateChatStage.get(host);
                 if(myStage != null) {
-                    myStage.setTitle("正在与 " + host.getName() + " 私聊");
-                    myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
-                    if (data != null)
-                        myStage.getLeft_center().getChildren().add(getMessagePane(host.getName(), data, new Image(GenerateImage(host.getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
-                    myStage.show();
+                    Platform.runLater(() -> {
+                        myStage.setTitle("正在与 " + host.getName() + " 私聊");
+                        myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
+                        if (data != null) {
+                            if(myStage.isFlag()) {
+                                myStage.getLeft_center().getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
+                                myStage.setFlag(false);
+                            }
+                            myStage.getLeft_center().getChildren().add(getMessagePane(host.getName(), data, new Image(GenerateImage(host.getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
+                        }
+                        myStage.show();
+                    });
                 }
                 break;
         }

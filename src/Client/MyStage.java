@@ -1,6 +1,5 @@
 package Client;
 
-import Bean.Host;
 import javafx.beans.binding.DoubleBinding;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Pos;
@@ -9,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
-import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -23,6 +21,8 @@ class MyStage extends Stage {
     private VBox left_center;
     private Button send;
     private TextArea inputArea;
+    private boolean flag = true;
+
     MyStage(){
         super();
         BorderPane root = new BorderPane();
@@ -73,6 +73,10 @@ class MyStage extends Stage {
 
         Scene scene = new Scene(root, 800, 600);
 
+        this.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if(!oldValue && newValue)
+                flag = true;
+        });
         this.setScene(scene);
         this.getScene().getStylesheets().add("style.css");
     }
@@ -87,6 +91,14 @@ class MyStage extends Stage {
 
     VBox getLeft_center() {
         return left_center;
+    }
+
+    public boolean isFlag() {
+        return flag;
+    }
+
+    public void setFlag(boolean flag) {
+        this.flag = flag;
     }
 
     //base64字符串转化成图片
