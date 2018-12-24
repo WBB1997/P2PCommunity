@@ -314,6 +314,8 @@ public class Main extends Application {
             gridPane.add(imageView, 0, 0, 1, 2);
         }
         gridPane.setHgap(10);
+        //        gridPane.setGridLinesVisible(true);
+//        gridPane.setBackground(new Background(new BackgroundFill(Color.GREY, null, null)));
         root.setPadding(new Insets(5, 5, 5, 5));
         root.getChildren().add(gridPane);
         return root;
