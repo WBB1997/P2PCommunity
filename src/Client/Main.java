@@ -474,6 +474,7 @@ public class Main extends Application {
             case RETURN_USER_LIST:
                 host = json.getObject("head", Host.class);
                 Pane userPane = getUserPane(host);
+                hostSet.add(host);
                 Platform.runLater(() -> right_root.getChildren().add(userPane));
                 break;
             case GROUP_SENDING:
