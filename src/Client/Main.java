@@ -589,6 +589,7 @@ public class Main extends Application {
         for (Host localHost : hostSet)
             if (localHost.equals(host))
                 return localHost.getImg();
+        System.out.println("未找到用户");
         return null;
     }
 
