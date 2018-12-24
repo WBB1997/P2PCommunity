@@ -587,10 +587,9 @@ public class Main extends Application {
     }
 
     private String GetImageStr(Host host) {
-        for (Host localHost : hostSet) {
+        for (Host localHost : hostSet)
             if (localHost.equals(host))
                 return localHost.getImg();
-        }
         return null;
     }
 
