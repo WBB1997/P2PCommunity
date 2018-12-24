@@ -263,7 +263,7 @@ public class Main extends Application {
                 //receive()是阻塞方法，等待其他人发来消息
                 data = new byte[65536];
                 receiver.receive(packet);
-                System.out.println("Rece " + new String(packet.getData()));
+                System.out.println("receive " + new String(packet.getData()));
                 try {
                     dealWithJson(new String(packet.getData()));
                 } catch (JSONException e) {
@@ -285,7 +285,7 @@ public class Main extends Application {
         try {
             InetAddress ip = InetAddress.getByName(groupAddres);
             DatagramPacket packet = new DatagramPacket(data, data.length, ip, Port);
-            System.out.println("Rece " + new String(packet.getData()));
+            System.out.println("send " + new String(packet.getData()));
             System.out.println("数据包长度 " + packet.getLength());
             sender.send(packet);
         } catch (IOException e) {
