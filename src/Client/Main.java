@@ -437,7 +437,8 @@ public class Main extends Application {
                 host = json.getObject("head", Host.class);
                 Platform.runLater(() -> {
                     for (Node node : right_root.getChildren()) {
-                        if (host == node.getUserData()) {
+                        Host lhost = (Host) node.getUserData();
+                        if (host.equals(lhost)) {
                             right_root.getChildren().remove(node);
                             hostSet.remove(host);
                             privateChatStage.remove(host);
