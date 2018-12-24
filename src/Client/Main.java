@@ -357,7 +357,7 @@ public class Main extends Application {
         if (str_data != null)
             jsonObject.put("data", str_data);
         if (target != null)
-            jsonObject.put("target", target);
+            jsonObject.put("target", new Host(target.getName(), target.getIp(), target.getPort(), null));
         return jsonObject;
     }
 
