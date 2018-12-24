@@ -159,6 +159,7 @@ public class Main extends Application {
                     name = result.get();
                     ((Text)Local_Pane.getChildren().get(1)).setText(name);
                     send_update_user_info();
+                    primaryStage.setTitle("当前登录用户名：" + name);
                 }
             } });
         // 关闭聊天窗口
