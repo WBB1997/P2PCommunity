@@ -573,6 +573,8 @@ public class Main extends Application {
             JSONObject jsonObject = JSON.parseObject(jsonString.toString());
             name = jsonObject.getString("name");
             imgFile = jsonObject.getString("imgFile");
+            if(imgFile == null)
+                imgFile = "res/default.png";
         } catch (IOException e) {
             e.printStackTrace();
         }
