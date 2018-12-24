@@ -63,7 +63,7 @@ public class Main extends Application {
     private static final int OFF_LINE = 2;         // 下线
     private static final int UPDATE_USER_INFO = 3; // 更新个人信息
     private static final int GET_USER_LIST = 4;    // 获取用户列表
-    private static final int RETURN_USER_LIST = 5; // 返回用户列表
+    private static final int RETURNED_USER_LIST = 5; // 返回用户列表
     private static final int GROUP_SENDING = 6;    // 群聊
     private static final int PRIVATE_CHAT = 7;     // 私聊
 
@@ -348,7 +348,7 @@ public class Main extends Application {
             head.put("name", name);
             head.put("ip", localhost.getHostAddress());
             head.put("port", Port);
-            if (code == UPDATE_USER_INFO || code == ON_LINE || code == RETURN_USER_LIST)
+            if (code == UPDATE_USER_INFO || code == ON_LINE || code == RETURNED_USER_LIST)
                 head.put("img", GetImageStr(imgFile));
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -469,13 +469,41 @@ public class Main extends Application {
                 }
                 break;
             case GET_USER_LIST:
-                send(constructLocalJson(null, RETURN_USER_LIST, null).toString().getBytes());
+                send(constructLocalJson(null, RETURNED_USER_LIST, null).toString().getBytes());
                 break;
-            case RETURN_USER_LIST:
+            case RETURNED_USER_LIST:
                 host = json.getObject("head", Host.class);
-                Pane userPane = getUserPane(host);
+                Platform.runLater(() -> {
+                    MyStage myStage;
+                    Pane userPane = getUserPane(host);
+                    userPane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
+                        if (event.getClickCount() == 2) {
+                            MyStage myStage1 = privateChatStage.get(host);
+                            if (!myStage1.isShowing())
+                                myStage1.show();
+                            else
+                                myStage1.requestFocus();
+                        }
+                    });
+                    right_root.getChildren().add(userPane);
+                    if (!privateChatStage.containsKey(host)) {
+                        myStage = new MyStage();
+                        Button button = myStage.getSend();
+                        TextArea textArea = myStage.getInputArea();
+                        VBox left_center = myStage.getLeft_center();
+                        button.setOnAction(event -> {
+                            String message = textArea.getText();
+                            textArea.setText("");
+                            send_private_chat(message, host);
+                            left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
+                            textArea.requestFocus();
+                        });
+                        myStage.setTitle("正在与 " + host.getName() + " 私聊");
+                        myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
+                        privateChatStage.put(host, myStage);
+                    }
+                });
                 hostSet.add(host);
-                Platform.runLater(() -> right_root.getChildren().add(userPane));
                 break;
             case GROUP_SENDING:
                 host = json.getObject("head", Host.class);
