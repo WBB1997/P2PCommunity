@@ -283,9 +283,9 @@ public class Main extends Application {
             return;
         }
         try {
-            System.out.println("数据包长度 " + data.length);
             InetAddress ip = InetAddress.getByName(groupAddres);
             DatagramPacket packet = new DatagramPacket(data, data.length, ip, Port);
+            System.out.println("Rece " + new String(packet.getData()));
             System.out.println("数据包长度 " + packet.getLength());
             sender.send(packet);
         } catch (IOException e) {
