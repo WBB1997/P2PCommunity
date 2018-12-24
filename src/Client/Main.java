@@ -399,8 +399,8 @@ public class Main extends Application {
             case ON_LINE:
                 host = json.getObject("head", Host.class);
                 Platform.runLater(() -> {
-                    Text prompt = new Text(host.getName() + "加入聊天室！");
                     MyStage myStage;
+                    Text prompt = new Text(host.getName() + " 上线了！");
                     prompt.setId("prompt");
                     left_center.getChildren().add(prompt);
                     Pane userPane = getUserPane(host);
@@ -442,6 +442,10 @@ public class Main extends Application {
                             right_root.getChildren().remove(node);
                             hostSet.remove(host);
                             privateChatStage.remove(host);
+                            left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
+                            Text prompt = new Text(host.getName() + " 下线了！");
+                            prompt.setId("prompt");
+                            left_center.getChildren().add(prompt);
                             break;
                         }
                     }
