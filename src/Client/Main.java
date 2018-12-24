@@ -18,6 +18,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
@@ -180,6 +181,13 @@ public class Main extends Application {
                 left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
             }
             inputArea.requestFocus();
+        });
+        // 回车发送消息
+        inputArea.setOnKeyPressed(event -> {
+            if(event.getCode() == KeyCode.ENTER) {
+                send.fire();
+                event.consume();
+            }
         });
         // 修改头像
         menuImg.setOnAction(event -> {

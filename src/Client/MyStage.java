@@ -2,12 +2,16 @@ package Client;
 
 import javafx.beans.binding.DoubleBinding;
 import javafx.collections.ListChangeListener;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -81,6 +85,12 @@ class MyStage extends Stage {
         this.getScene().getStylesheets().add("style.css");
 
         close.setOnAction(event -> this.hide());
+        inputArea.setOnKeyPressed(event -> {
+            if(event.getCode() == KeyCode.ENTER) {
+                send.fire();
+                event.consume();
+            }
+        });
     }
 
     Button getSend() {
