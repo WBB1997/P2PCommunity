@@ -185,8 +185,8 @@ public class Main extends Application {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("修改头像");
             fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                    new FileChooser.ExtensionFilter("PNG", "*.png")
+                    new FileChooser.ExtensionFilter("PNG", "*.png"),
+                    new FileChooser.ExtensionFilter("JPG", "*.jpg")
             );
             File file = fileChooser.showOpenDialog(primaryStage);
             while (file != null && file.length() > 10240){
@@ -467,33 +467,35 @@ public class Main extends Application {
                 break;
             case RETURN_USER_LIST:
                 host = json.getObject("head", Host.class);
-                Pane userPane = getUserPane(host);
-                userPane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
-                    if(event.getClickCount() == 2) {
-                        MyStage myStage1 = privateChatStage.get(host);
-                        if (!myStage1.isShowing())
-                            myStage1.show();
-                        else
-                            myStage1.requestFocus();
+                Platform.runLater(() -> {
+                    Pane userPane = getUserPane(host);
+                    userPane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
+                        if (event.getClickCount() == 2) {
+                            MyStage myStage1 = privateChatStage.get(host);
+                            if (!myStage1.isShowing())
+                                myStage1.show();
+                            else
+                                myStage1.requestFocus();
+                        }
+                    });
+                    right_root.getChildren().add(userPane);
+                    if (!privateChatStage.containsKey(host)) {
+                        MyStage myStage = new MyStage();
+                        Button button = myStage.getSend();
+                        TextArea textArea = myStage.getInputArea();
+                        VBox left_center = myStage.getLeft_center();
+                        button.setOnAction(event -> {
+                            String message = textArea.getText();
+                            textArea.setText("");
+                            send_private_chat(message, host);
+                            left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
+                            textArea.requestFocus();
+                        });
+                        myStage.setTitle("正在与 " + host.getName() + " 私聊");
+                        myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
+                        privateChatStage.put(host, myStage);
                     }
                 });
-                right_root.getChildren().add(userPane);
-                if(!privateChatStage.containsKey(host)){
-                    MyStage myStage = new MyStage();
-                    Button button = myStage.getSend();
-                    TextArea textArea = myStage.getInputArea();
-                    VBox left_center = myStage.getLeft_center();
-                    button.setOnAction(event -> {
-                        String message = textArea.getText();
-                        textArea.setText("");
-                        send_private_chat(message, host);
-                        left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
-                        textArea.requestFocus();
-                    });
-                    myStage.setTitle("正在与 " + host.getName() + " 私聊");
-                    myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
-                    privateChatStage.put(host, myStage);
-                }
                 break;
             case GROUP_SENDING:
                 host = json.getObject("head", Host.class);
