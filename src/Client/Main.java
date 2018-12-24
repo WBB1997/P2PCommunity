@@ -261,6 +261,7 @@ public class Main extends Application {
             while (true) {
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 //receive()是阻塞方法，等待其他人发来消息
+                data = new byte[65536];
                 receiver.receive(packet);
                 System.out.println("Rece " + new String(packet.getData()));
                 try {
