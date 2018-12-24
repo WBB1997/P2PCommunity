@@ -11,8 +11,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -22,7 +20,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
@@ -55,8 +52,8 @@ public class Main extends Application {
     private Stage MainStage;
 
     // 个人信息
-    private String name;
-    private String imgFile;
+    private String name = "默认用户";
+    private String imgFile = "res/default.png";
     private Pane Local_Pane;
     // 文件路径
     private File file = new File("res/config");
@@ -573,7 +570,7 @@ public class Main extends Application {
             JSONObject jsonObject = JSON.parseObject(jsonString.toString());
             name = jsonObject.getString("name");
             imgFile = jsonObject.getString("imgFile");
-            if(imgFile == null)
+            if(!(new File(imgFile).exists()))
                 imgFile = "res/default.png";
         } catch (IOException e) {
             e.printStackTrace();
