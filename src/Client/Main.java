@@ -217,7 +217,7 @@ public class Main extends Application {
                             left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
                             flag = false;
                         }
-                        left_center.getChildren().add(getMessagePane(pair.getKey().getName(), pair.getValue(), new Image(GenerateImage(GetImageStr(pair.getKey().getImg())), 32, 32, true, true), Pos.CENTER_LEFT));
+                        left_center.getChildren().add(getMessagePane(pair.getKey().getName(), pair.getValue(), new Image(GenerateImage(GetImageStr(pair.getKey())), 32, 32, true, true), Pos.CENTER_LEFT));
                     });
                 }
             }
@@ -587,12 +587,9 @@ public class Main extends Application {
     }
 
     private String GetImageStr(Host host) {
-        Iterator<Host> hostIterator = hostSet.iterator();
-        while (hostIterator.hasNext()) {
-            Host localHost = hostIterator.next();
-            if (localHost.equals(host)) {
+        for (Host localHost : hostSet) {
+            if (localHost.equals(host))
                 return localHost.getImg();
-            }
         }
         return null;
     }
