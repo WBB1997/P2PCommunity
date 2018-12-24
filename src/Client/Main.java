@@ -59,7 +59,7 @@ public class Main extends Application {
     private File file = new File("res/config");
 
 
-    private static final int ON_LINE = 1;           // 上线通知
+    private static final int ON_LINE = 1;           // 上线
     private static final int OFF_LINE = 2;         // 下线
     private static final int UPDATE_USER_INFO = 3; // 更新个人信息
     private static final int GET_USER_LIST = 4;    // 获取用户列表
@@ -216,7 +216,7 @@ public class Main extends Application {
                             left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
                             flag = false;
                         }
-                        left_center.getChildren().add(getMessagePane(pair.getKey().getName(), pair.getValue(), new Image(GenerateImage(pair.getKey().getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
+                        left_center.getChildren().add(getMessagePane(pair.getKey().getName(), pair.getValue(), new Image(GenerateImage(GetImageStr(pair.getKey().getImg())), 32, 32, true, true), Pos.CENTER_LEFT));
                     });
                 }
             }
@@ -347,7 +347,8 @@ public class Main extends Application {
             head.put("name", name);
             head.put("ip", localhost.getHostAddress());
             head.put("port", Port);
-            head.put("img", GetImageStr(imgFile));
+            if(code == UPDATE_USER_INFO || code == ON_LINE || code == RETURN_USER_LIST)
+                head.put("img", GetImageStr(imgFile));
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -460,7 +461,6 @@ public class Main extends Application {
                         Platform.runLater(() -> {
                             Text nameText = (Text) gridPane.getChildren().get(1);
                             nameText.setText(host.getName());
-                            MainStage.setTitle("当前登录用户名：" + name);
                             ImageView imageView = (ImageView) gridPane.getChildren().get(0);
                             imageView.setImage(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
                         });
@@ -472,35 +472,8 @@ public class Main extends Application {
                 break;
             case RETURN_USER_LIST:
                 host = json.getObject("head", Host.class);
-                Platform.runLater(() -> {
-                    Pane userPane = getUserPane(host);
-                    userPane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
-                        if (event.getClickCount() == 2) {
-                            MyStage myStage1 = privateChatStage.get(host);
-                            if (!myStage1.isShowing())
-                                myStage1.show();
-                            else
-                                myStage1.requestFocus();
-                        }
-                    });
-                    right_root.getChildren().add(userPane);
-                    if (!privateChatStage.containsKey(host)) {
-                        MyStage myStage = new MyStage();
-                        Button button = myStage.getSend();
-                        TextArea textArea = myStage.getInputArea();
-                        VBox left_center = myStage.getLeft_center();
-                        button.setOnAction(event -> {
-                            String message = textArea.getText();
-                            textArea.setText("");
-                            send_private_chat(message, host);
-                            left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
-                            textArea.requestFocus();
-                        });
-                        myStage.setTitle("正在与 " + host.getName() + " 私聊");
-                        myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
-                        privateChatStage.put(host, myStage);
-                    }
-                });
+                Pane userPane = getUserPane(host);
+                right_root.getChildren().add(userPane);
                 break;
             case GROUP_SENDING:
                 host = json.getObject("head", Host.class);
@@ -521,13 +494,12 @@ public class Main extends Application {
                 if(myStage != null) {
                     Platform.runLater(() -> {
                         myStage.setTitle("正在与 " + host.getName() + " 私聊");
-                        myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
                         if (data != null) {
                             if(myStage.isFlag()) {
                                 myStage.getLeft_center().getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
                                 myStage.setFlag(false);
                             }
-                            myStage.getLeft_center().getChildren().add(getMessagePane(host.getName(), data, new Image(GenerateImage(host.getImg()), 32, 32, true, true), Pos.CENTER_LEFT));
+                            myStage.getLeft_center().getChildren().add(getMessagePane(host.getName(), data,new Image(GenerateImage(GetImageStr(host)), 32, 32, true, true), Pos.CENTER_LEFT));
                         }
                         myStage.show();
                     });
@@ -610,6 +582,17 @@ public class Main extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String GetImageStr(Host host){
+        Iterator<Host> hostIterator = hostSet.iterator();
+        while(hostIterator.hasNext()){
+            Host localHost =  hostIterator.next();
+            if(localHost.equals(host)){
+                return localHost.getImg();
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) {
