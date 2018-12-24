@@ -204,7 +204,7 @@ public class Main extends Application {
                     ImageIO.write(SwingFXUtils.fromFXImage(new Image("file:" + file.getAbsolutePath()),null), "png", new File("res/" + file.getName()));
                     imgFile = "res/" + file.getName();
                     send_update_user_info();
-                    ((ImageView)Local_Pane.getChildren().get(0)).setImage(new Image("file:" + imgFile));
+                    ((ImageView)Local_Pane.getChildren().get(0)).setImage(new Image("file:" + imgFile,32, 32, true, true ));
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -331,8 +331,8 @@ public class Main extends Application {
         gridPane.add(nameText, 1, 0, 3, 1);
         Tooltip tooltip = new Tooltip(host.getIp());
         Tooltip.install(gridPane, tooltip);
-        gridPane.setGridLinesVisible(true);
-        gridPane.setBackground(new Background(new BackgroundFill(Color.GREY, null, null)));
+//        gridPane.setGridLinesVisible(true);
+//        gridPane.setBackground(new Background(new BackgroundFill(Color.GREY, null, null)));
         gridPane.setHgap(10);
         return gridPane;
     }
