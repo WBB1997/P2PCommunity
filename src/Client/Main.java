@@ -467,8 +467,33 @@ public class Main extends Application {
                 break;
             case RETURN_USER_LIST:
                 host = json.getObject("head", Host.class);
-                Platform.runLater(() -> right_root.getChildren().add(getUserPane(host)));
-                hostSet.add(host);
+                Pane userPane = getUserPane(host);
+                userPane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
+                    if(event.getClickCount() == 2) {
+                        MyStage myStage1 = privateChatStage.get(host);
+                        if (!myStage1.isShowing())
+                            myStage1.show();
+                        else
+                            myStage1.requestFocus();
+                    }
+                });
+                right_root.getChildren().add(userPane);
+                if(!privateChatStage.containsKey(host)){
+                    MyStage myStage = new MyStage();
+                    Button button = myStage.getSend();
+                    TextArea textArea = myStage.getInputArea();
+                    VBox left_center = myStage.getLeft_center();
+                    button.setOnAction(event -> {
+                        String message = textArea.getText();
+                        textArea.setText("");
+                        send_private_chat(message, host);
+                        left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
+                        textArea.requestFocus();
+                    });
+                    myStage.setTitle("正在与 " + host.getName() + " 私聊");
+                    myStage.getIcons().add(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
+                    privateChatStage.put(host, myStage);
+                }
                 break;
             case GROUP_SENDING:
                 host = json.getObject("head", Host.class);
