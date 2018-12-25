@@ -249,7 +249,7 @@ public class EmojiPane extends AnchorPane {
     public static String getEmojiImagePath(String inner_path) {
         File file = new File("./res/png_40/" + inner_path + ".png");
         String path = file.getAbsolutePath();
-        return "file:" + path.replace(".\\res", "\\res");
+        return "file:" + path.replace(".\\res", "res");
     }
 
     class ToneCell extends ListCell<Image> {
