@@ -17,7 +17,7 @@ import javafx.stage.Stage;
 class MyStage extends Stage {
     private VBox left_center;
     private Button send;
-    private RichTextPane inputArea;
+    private RichTextPane inputArea = new RichTextPane();
     private boolean flag = true;
 
     MyStage(){
@@ -48,7 +48,6 @@ class MyStage extends Stage {
         left_bottom_top.getChildren().add(expression);
 
         // inputArea
-        inputArea = new RichTextPane();
         inputArea.requestFocus();
         DoubleBinding height = this.heightProperty().divide(4);
         inputArea.minHeightProperty().bind(height);
