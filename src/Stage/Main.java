@@ -25,16 +25,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
-import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Pair;
-import org.jsoup.nodes.TextNode;
-import org.scenicview.ScenicView;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
@@ -492,6 +488,9 @@ public class Main extends Application {
                             nameText.setText(host.getName());
                             ImageView imageView = (ImageView) gridPane.getChildren().get(0);
                             imageView.setImage(new Image(GenerateImage(host.getImg()), 32, 32, true, true));
+                            hostSet.remove(host1);
+                            gridPane.setUserData(host);
+                            hostSet.add(host);
                         });
                     }
                 }
