@@ -54,10 +54,11 @@ public class Main extends Application {
     private ObservableList<Pair<Host, String>> DataObservableList = FXCollections.observableArrayList();
     private Map<Host, MyStage> privateChatStage = new HashMap<>();
     private Set<Host> hostSet = new HashSet<>();
-    private VBox right_root;
+    private ListView<Pane> right_root;
     private VBox left_center;
     private boolean flag = true;
     private RichTextPane inputArea = new RichTextPane();
+    private ObservableList<Pane> paneObservableList = FXCollections.observableArrayList();
 
     // 个人信息
     private String name = "默认用户";
@@ -90,12 +91,10 @@ public class Main extends Application {
         root.setTop(menuBar);
 
         // right_root
-        right_root = new VBox();
+        right_root = new ListView<>();
         right_root.setId("right_root");
-        ScrollPane right_root_scro = new ScrollPane();
-        right_root_scro.setId("right_root_scro");
-        right_root_scro.setContent(right_root);
-        root.setRight(right_root_scro);
+        right_root.setItems(paneObservableList);
+        root.setRight(right_root);
 
         // left_center
         StackPane stackPane = new StackPane();
@@ -134,6 +133,7 @@ public class Main extends Application {
 
         // left_bottom
         VBox left_bottom = new VBox();
+        left_bottom.setId("left_bottom");
         left_bottom.getChildren().addAll(left_bottom_top, inputArea, left_bottom_bottom);
 
         // left_root
@@ -258,18 +258,39 @@ public class Main extends Application {
         try {
             InetAddress ip = InetAddress.getByName(groupAddres);
             receiver = new MulticastSocket(Port);
-            receiver.setLoopbackMode(true);
+            receiver.setLoopbackMode(false);
             receiver.joinGroup(ip);
             receiver.setTimeToLive(128);
             sender = new MulticastSocket();
-            sender.setLoopbackMode(true);
+            sender.setLoopbackMode(false);
             sender.joinGroup(ip);
             sender.setTimeToLive(128);
             new Thread(this::receive).start();
             Host host = new Host(name, InetAddress.getLocalHost().getHostAddress(), Port, GetImageStr(imgFile));
+//            Host host1 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6666, GetImageStr(imgFile));
+//            Host host2 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6668, GetImageStr(imgFile));
+//            Host host3 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6636, GetImageStr(imgFile));
+//            Host host4 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6676, GetImageStr(imgFile));
+//            Host host5 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6606, GetImageStr(imgFile));
+//            Host host6 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6616, GetImageStr(imgFile));
+//            Host host7 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6626, GetImageStr(imgFile));
+//            Host host8 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6186, GetImageStr(imgFile));
+//            Host host9 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6996, GetImageStr(imgFile));
+//            Host host10 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6466, GetImageStr(imgFile));
+//            Host host11 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 7866, GetImageStr(imgFile));
             Local_Pane = getUserPane(host);
-            Platform.runLater(() -> right_root.getChildren().add(Local_Pane));
-            hostSet.add(host);
+            Platform.runLater(() -> paneObservableList.add(Local_Pane));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host1)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host2)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host3)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host4)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host5)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host6)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host7)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host8)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host9)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host10)));
+//            Platform.runLater(() -> paneObservableList.add(getUserPane(host11)));
             send_get_user_list();
             send_on_line();
         } catch (IOException e) {
@@ -439,7 +460,7 @@ public class Main extends Application {
                                 myStage1.requestFocus();
                         }
                     });
-                    right_root.getChildren().add(userPane);
+                    paneObservableList.add(userPane);
                     if (!privateChatStage.containsKey(host)) {
                         myStage = new MyStage();
                         Button button = myStage.getSend();
@@ -462,10 +483,10 @@ public class Main extends Application {
             case OFF_LINE:
                 host = json.getObject("head", Host.class);
                 Platform.runLater(() -> {
-                    for (Node node : right_root.getChildren()) {
-                        Host lhost = (Host) node.getUserData();
+                    for (Pane pane : paneObservableList) {
+                        Host lhost = (Host) pane.getUserData();
                         if (host.equals(lhost)) {
-                            right_root.getChildren().remove(node);
+                            paneObservableList.remove(pane);
                             hostSet.remove(host);
                             privateChatStage.remove(host);
                             left_center.getChildren().add(new Text(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())));
@@ -479,10 +500,10 @@ public class Main extends Application {
                 break;
             case UPDATE_USER_INFO:
                 host = json.getObject("head", Host.class);
-                for (Node node : right_root.getChildren()) {
-                    Host host1 = (Host) node.getUserData();
+                for (Pane pane : paneObservableList) {
+                    Host host1 = (Host) pane.getUserData();
                     if (host1.getIp().equals(host.getIp()) && host1.getPort() == host.getPort()) {
-                        GridPane gridPane = (GridPane) node;
+                        GridPane gridPane = (GridPane) pane;
                         Platform.runLater(() -> {
                             Text nameText = (Text) gridPane.getChildren().get(1);
                             nameText.setText(host.getName());
@@ -512,7 +533,7 @@ public class Main extends Application {
                                 myStage1.requestFocus();
                         }
                     });
-                    right_root.getChildren().add(userPane);
+                    paneObservableList.add(userPane);
                     if (!privateChatStage.containsKey(host)) {
                         myStage = new MyStage();
                         Button button = myStage.getSend();

@@ -5,13 +5,22 @@
     -fx-padding: 5, 5, 5, 5;
 }
 
-#right_root{
+#right_root {
     -fx-background-color: white;
     -fx-alignment: top-center;
     -fx-spacing: 5px;
-    -fx-border-style: hidden hidden hidden solid;
+    -fx-border-style: solid solid solid hidden;
     -fx-border-color: #c5c5c5;
-    -fx-padding: 5 20 5 20;
+    /*-fx-padding: 5 20 5 20;*/
+}
+
+#right_root .list-cell {
+    -fx-background-color: white;
+}
+
+#left_bottom {
+    -fx-border-style: hidden solid hidden hidden;
+    -fx-border-color: #c5c5c5;
 }
 
 #left_bottom_bottom {
@@ -29,21 +38,21 @@
     -fx-padding: 3 5 3 5;
 }
 
-#left_center_scro, #right_root_scro{
+#left_center_scro {
     -fx-background-color: white;
     -fx-hbar-policy: never;
     -fx-vbar-policy: as-needed;
     -fx-fit-to-height: true;
     -fx-fit-to-width: true;
-    -fx-border-style: solid hidden hidden hidden;
+    -fx-border-style: solid solid hidden hidden;
     -fx-border-color: #c5c5c5;
 }
 
-.menu-bar{
+.menu-bar {
     -fx-background-color: white;
 }
 
-#richTextPane{
+#richTextPane {
     -fx-background-insets: 0;
     -fx-background-color: white;
 }
@@ -56,8 +65,7 @@
     -fx-background-color: white;
 }
 
-#richTextPane .top-toolbar
-{
+#richTextPane .top-toolbar {
     -fx-max-width: 0px;
     -fx-min-width: 0px;
     -fx-pref-width: 0px;
@@ -67,8 +75,7 @@
     -fx-opacity: 0;
 }
 
-#richTextPane .bottom-toolbar
-{
+#richTextPane .bottom-toolbar {
     -fx-max-width: 0px;
     -fx-min-width: 0px;
     -fx-pref-width: 0px;
@@ -76,5 +83,49 @@
     -fx-min-height: 0px;
     -fx-pref-height: 0px;
     -fx-opacity: 0;
+}
+
+/* The main scrollbar **track** CSS class  */
+.list-view .scroll-bar:horizontal .track,
+.list-view .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0em;
+    -fx-border-radius: 2em;
+}
+
+/* The increment and decrement button CSS class of scrollbar */
+.list-view .scroll-bar:horizontal .increment-button,
+.list-view .scroll-bar:horizontal .decrement-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0em;
+    -fx-padding: 0 0 10 0;
+
+}
+
+/* The increment and decrement button CSS class of scrollbar */
+
+.list-view .scroll-bar:vertical .increment-button,
+.list-view .scroll-bar:vertical .decrement-button {
+
+    -fx-background-color: transparent;
+    -fx-background-radius: 0em;
+    -fx-padding: 0 10 0 0;
+
+}
+
+.list-view .scroll-bar .increment-arrow,
+.list-view .scroll-bar .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
+}
+
+/* The main scrollbar **thumb** CSS class which we drag every time (movable) */
+.list-view .scroll-bar:horizontal .thumb,
+.list-view .scroll-bar:vertical .thumb {
+    -fx-background-color: derive(black, 90%);
+    -fx-background-insets: 2, 0, 0;
+    -fx-background-radius: 2em;
+
 }
 
