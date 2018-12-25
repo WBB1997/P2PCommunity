@@ -170,6 +170,7 @@ public class Main extends Application {
                         alert.showAndWait();
                         return;
                     }
+                    hostSet.remove(new Host(name, null, -1, null));
                     name = result.get();
                     ((Text) Local_Pane.getChildren().get(1)).setText(name);
                     send_update_user_info();
