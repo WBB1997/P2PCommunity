@@ -258,11 +258,11 @@ public class Main extends Application {
         try {
             InetAddress ip = InetAddress.getByName(groupAddres);
             receiver = new MulticastSocket(Port);
-            receiver.setLoopbackMode(false);
+            receiver.setLoopbackMode(true);
             receiver.joinGroup(ip);
             receiver.setTimeToLive(128);
             sender = new MulticastSocket();
-            sender.setLoopbackMode(false);
+            sender.setLoopbackMode(true);
             sender.joinGroup(ip);
             sender.setTimeToLive(128);
             new Thread(this::receive).start();
