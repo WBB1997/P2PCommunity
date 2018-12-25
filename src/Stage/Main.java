@@ -332,7 +332,7 @@ public class Main extends Application {
             messageTextFlow.setTextAlignment(TextAlignment.RIGHT);
             gridPane.add(nameText, 0, 0, 3, 1);
             gridPane.add(messageTextFlow, 0, 1, 3, 1);
-            gridPane.add(imageView, 3, 0, 1, 2);
+            gridPane.add(imageView, 3, 0, 1, 1);
         } else if (value == Pos.CENTER_LEFT) {
             messageTextFlow.setTextAlignment(TextAlignment.LEFT);
 //            gridPane.add(nameText, 1, 0, 3, 1);
