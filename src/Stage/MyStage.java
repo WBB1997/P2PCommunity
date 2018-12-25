@@ -1,5 +1,6 @@
 package Stage;
 
+import Pane.EmojiPane;
 import Pane.RichTextPane;
 import javafx.beans.binding.DoubleBinding;
 import javafx.collections.ListChangeListener;
@@ -10,10 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 class MyStage extends Stage {
@@ -26,6 +24,7 @@ class MyStage extends Stage {
         super();
         BorderPane root = new BorderPane();
         // left_center
+        StackPane stackPane = new StackPane();
         ScrollPane left_center_scro = new ScrollPane();
         left_center_scro.setId("left_center_scro");
         left_center = new VBox();
@@ -37,6 +36,10 @@ class MyStage extends Stage {
         });
         left_center.requestFocus();
         left_center_scro.setContent(left_center);
+        EmojiPane emojiPane = new EmojiPane(inputArea);
+        emojiPane.setVisible(false);
+        emojiPane.setOnMouseClicked(event -> emojiPane.setVisible(false));
+        stackPane.getChildren().addAll(left_center_scro, emojiPane);
 
         // left_bottom_top
         HBox left_bottom_top = new HBox();
@@ -65,8 +68,8 @@ class MyStage extends Stage {
         // left_root
         VBox left_root = new VBox();
         left_root.setFillWidth(true);
-        left_root.getChildren().addAll(left_center_scro, left_bottom);
-        VBox.setVgrow(left_center_scro, Priority.ALWAYS);
+        left_root.getChildren().addAll(stackPane, left_bottom);
+        VBox.setVgrow(stackPane, Priority.ALWAYS);
         root.setCenter(left_root);
 
         Scene scene = new Scene(root, 800, 600);
@@ -78,6 +81,8 @@ class MyStage extends Stage {
         this.setScene(scene);
         this.getScene().getStylesheets().add("style.css");
 
+        // 表情包
+        expression.setOnAction(event -> emojiPane.setVisible(!emojiPane.isVisible()));
         close.setOnAction(event -> this.hide());
         inputArea.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.ENTER) {
