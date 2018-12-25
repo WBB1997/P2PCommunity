@@ -163,6 +163,8 @@ public class Main extends Application {
             if (result.isPresent()) {
                 if (!result.get().isEmpty()) {
                     name = result.get();
+                    if(hostSet.contains(new Host(name, null, -1, null)))
+                        return;
                     ((Text) Local_Pane.getChildren().get(1)).setText(name);
                     send_update_user_info();
                     primaryStage.setTitle("当前登录用户名：" + name);
@@ -445,6 +447,8 @@ public class Main extends Application {
         switch (code) {
             case ON_LINE:
                 host = json.getObject("head", Host.class);
+                if(hostSet.contains(host))
+                    return;
                 Platform.runLater(() -> {
                     MyStage myStage;
                     Text prompt = new Text(host.getName() + " 上线了！");
@@ -521,6 +525,8 @@ public class Main extends Application {
                 break;
             case RETURNED_USER_LIST:
                 host = json.getObject("head", Host.class);
+                if(hostSet.contains(host))
+                    return;
                 Platform.runLater(() -> {
                     MyStage myStage;
                     Pane userPane = getUserPane(host);

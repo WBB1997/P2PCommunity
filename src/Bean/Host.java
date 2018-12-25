@@ -54,8 +54,7 @@ public class Host {
 
         Host host = (Host) o;
 
-        if (port != host.port) return false;
-        return Objects.equals(ip, host.ip);
+        return Objects.equals(name, host.name);
     }
 
     @Override
