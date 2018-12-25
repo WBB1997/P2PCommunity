@@ -1,5 +1,6 @@
 package Stage;
 
+import Pane.RichTextPane;
 import javafx.beans.binding.DoubleBinding;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Pos;
@@ -18,7 +19,7 @@ import javafx.stage.Stage;
 class MyStage extends Stage {
     private VBox left_center;
     private Button send;
-    private TextArea inputArea;
+    private RichTextPane inputArea;
     private boolean flag = true;
 
     MyStage(){
@@ -44,12 +45,11 @@ class MyStage extends Stage {
         left_bottom_top.getChildren().add(expression);
 
         // inputArea
-        inputArea = new TextArea();
-        inputArea.setWrapText(true);
+        inputArea = new RichTextPane();
         inputArea.requestFocus();
         DoubleBinding height = this.heightProperty().divide(4);
         inputArea.minHeightProperty().bind(height);
-        inputArea.setPromptText("在这里输入消息");
+        inputArea.maxHeightProperty().bind(height);
 
         // left_bottom_bottom
         HBox left_bottom_bottom = new HBox();
@@ -91,7 +91,7 @@ class MyStage extends Stage {
         return send;
     }
 
-    TextArea getInputArea() {
+    RichTextPane getRichTextPane() {
         return inputArea;
     }
 

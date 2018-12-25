@@ -443,11 +443,11 @@ public class Main extends Application {
                     if (!privateChatStage.containsKey(host)) {
                         myStage = new MyStage();
                         Button button = myStage.getSend();
-                        TextArea textArea = myStage.getInputArea();
+                        RichTextPane textArea = myStage.getRichTextPane();
                         VBox left_center = myStage.getLeft_center();
                         button.setOnAction(event -> {
-                            String message = textArea.getText();
-                            textArea.setText("");
+                            String message = textArea.getStringText().toString();
+                            textArea.clearText();
                             send_private_chat(message, host);
                             left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
                             textArea.requestFocus();
@@ -516,11 +516,11 @@ public class Main extends Application {
                     if (!privateChatStage.containsKey(host)) {
                         myStage = new MyStage();
                         Button button = myStage.getSend();
-                        TextArea textArea = myStage.getInputArea();
+                        RichTextPane textArea = myStage.getRichTextPane();
                         VBox left_center = myStage.getLeft_center();
                         button.setOnAction(event -> {
-                            String message = textArea.getText();
-                            textArea.setText("");
+                            String message = textArea.getStringText().toString();
+                            textArea.clearText();
                             send_private_chat(message, host);
                             left_center.getChildren().add(getMessagePane(name, message, new Image("file:" + imgFile, 32, 32, true, true), Pos.CENTER_RIGHT));
                             textArea.requestFocus();
