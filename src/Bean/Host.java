@@ -59,10 +59,7 @@ public class Host {
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (ip != null ? ip.hashCode() : 0);
-        result = 31 * result + port;
-        return result;
+        return name != null ? name.hashCode() : 0;
     }
 
     @Override

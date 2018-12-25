@@ -162,9 +162,15 @@ public class Main extends Application {
             Optional<String> result = dialog.showAndWait();
             if (result.isPresent()) {
                 if (!result.get().isEmpty()) {
-                    name = result.get();
-                    if(hostSet.contains(new Host(name, null, -1, null)))
+                    if(hostSet.contains(new Host(result.get(), null, -1, null))){
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("错误");
+                        alert.setHeaderText(null);
+                        alert.setContentText("用户名重复");
+                        alert.showAndWait();
                         return;
+                    }
+                    name = result.get();
                     ((Text) Local_Pane.getChildren().get(1)).setText(name);
                     send_update_user_info();
                     primaryStage.setTitle("当前登录用户名：" + name);
@@ -269,17 +275,29 @@ public class Main extends Application {
             sender.setTimeToLive(128);
             new Thread(this::receive).start();
             Host host = new Host(name, InetAddress.getLocalHost().getHostAddress(), Port, GetImageStr(imgFile));
-//            Host host1 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6666, GetImageStr(imgFile));
-//            Host host2 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6668, GetImageStr(imgFile));
-//            Host host3 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6636, GetImageStr(imgFile));
-//            Host host4 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6676, GetImageStr(imgFile));
-//            Host host5 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6606, GetImageStr(imgFile));
-//            Host host6 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6616, GetImageStr(imgFile));
-//            Host host7 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6626, GetImageStr(imgFile));
-//            Host host8 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6186, GetImageStr(imgFile));
-//            Host host9 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6996, GetImageStr(imgFile));
-//            Host host10 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 6466, GetImageStr(imgFile));
-//            Host host11 = new Host(name, InetAddress.getLocalHost().getHostAddress(), 7866, GetImageStr(imgFile));
+//            Host host1 = new Host("2", InetAddress.getLocalHost().getHostAddress(), 6666, GetImageStr(imgFile));
+//            Host host2 = new Host("3", InetAddress.getLocalHost().getHostAddress(), 6668, GetImageStr(imgFile));
+//            Host host3 = new Host("4", InetAddress.getLocalHost().getHostAddress(), 6636, GetImageStr(imgFile));
+//            Host host4 = new Host("5", InetAddress.getLocalHost().getHostAddress(), 6676, GetImageStr(imgFile));
+//            Host host5 = new Host("6", InetAddress.getLocalHost().getHostAddress(), 6606, GetImageStr(imgFile));
+//            Host host6 = new Host("7", InetAddress.getLocalHost().getHostAddress(), 6616, GetImageStr(imgFile));
+//            Host host7 = new Host("8", InetAddress.getLocalHost().getHostAddress(), 6626, GetImageStr(imgFile));
+//            Host host8 = new Host("9", InetAddress.getLocalHost().getHostAddress(), 6186, GetImageStr(imgFile));
+//            Host host9 = new Host("10", InetAddress.getLocalHost().getHostAddress(), 6996, GetImageStr(imgFile));
+//            Host host10 = new Host("11", InetAddress.getLocalHost().getHostAddress(), 6466, GetImageStr(imgFile));
+//            Host host11 = new Host("12", InetAddress.getLocalHost().getHostAddress(), 7866, GetImageStr(imgFile));
+            hostSet.add(host);
+//            hostSet.add(host1);
+//            hostSet.add(host2);
+//            hostSet.add(host3);
+//            hostSet.add(host4);
+//            hostSet.add(host5);
+//            hostSet.add(host6);
+//            hostSet.add(host7);
+//            hostSet.add(host8);
+//            hostSet.add(host9);
+//            hostSet.add(host10);
+//            hostSet.add(host11);
             Local_Pane = getUserPane(host);
             Platform.runLater(() -> paneObservableList.add(Local_Pane));
 //            Platform.runLater(() -> paneObservableList.add(getUserPane(host1)));
