@@ -144,7 +144,7 @@ public class Main extends Application {
         root.setCenter(left_root);
 
         primaryStage.setTitle("当前登录用户名：" + name);
-        Scene scene = new Scene(root, 1024, 768);
+        Scene scene = new Scene(root, 800, 600);
 
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image("file:res/chat.png"));
